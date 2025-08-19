@@ -243,15 +243,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Posts CRUD API"
-    - "Comments API"
-    - "Search and Tags API"
     - "Create Post Form"
     - "Comments System"
     - "Tag System"
     - "Search Functionality"
   stuck_tasks: []
-  test_all: true
+  test_all: false
   test_priority: "high_first"
 
 agent_communication:
