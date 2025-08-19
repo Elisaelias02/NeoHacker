@@ -234,15 +234,18 @@ frontend:
 
   - task: "Comments System"
     implemented: true
-    working: "unknown"
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "unknown"
         agent: "main"
         comment: "Post detail view with comments display and comment creation form. UI implemented but API integration needs testing."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED: Comments System working perfectly. Successfully created comment 'Excelente pregunta! Te recomiendo empezar con Nmap y Burp Suite.' Authentication required for commenting, post detail view working, comment creation and display functional, API integration successful."
 
 metadata:
   created_by: "main_agent"
