@@ -107,39 +107,48 @@ user_problem_statement: "Blog moderno y responsivo para hackers éticos con dise
 backend:
   - task: "Posts CRUD API"
     implemented: true
-    working: "unknown"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "unknown"
         agent: "main"
         comment: "Implemented complete posts API with create, read, search, delete endpoints. Includes proper MongoDB integration with UUID, datetime handling, and tag filtering."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED: All Posts CRUD operations working perfectly. Tested POST /api/posts (created 4 hacker-themed posts), GET /api/posts (retrieved 10 posts including existing sample data), GET /api/posts/{id} (specific post retrieval), GET /api/posts?search=OSINT (text search in title/content/tags returned 3 matches), GET /api/posts?tag=pentesting (tag filtering returned 3 posts), DELETE /api/posts/{id} (successful deletion with verification). MongoDB integration, UUID generation, datetime handling, and all CRUD operations functioning correctly."
 
   - task: "Comments API"
     implemented: true
-    working: "unknown"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "unknown"
         agent: "main"
         comment: "Implemented comments system with post association, CRUD operations and proper validation."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED: Comments API working perfectly. Tested POST /api/comments (created 3 realistic hacker-themed comments with proper post association), GET /api/comments/{post_id} (retrieved 2 comments for specific post). Post validation working correctly - prevents comments on non-existent posts. UUID generation, datetime handling, and post-comment relationships functioning correctly."
 
   - task: "Search and Tags API"
     implemented: true
-    working: "unknown"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "unknown"
         agent: "main"
         comment: "Implemented search functionality with text search in title/content/tags, tag filtering, and popular tags aggregation endpoint."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED: Search and Tags API working perfectly. Tested GET /api/tags (retrieved 18 popular tags with accurate counts including pentesting:3, web:3, blueteam:3, redteam:3, osint:3), search functionality with case-insensitive regex matching across title/content/tags, and tag filtering. MongoDB aggregation pipeline for popular tags working correctly with proper sorting and counting."
 
 frontend:
   - task: "Cyberpunk UI Design"
