@@ -1,12 +1,96 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
 import "./App.css";
 import axios from "axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Auth Context
+const AuthContext = createContext();
+
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      fetchCurrentUser();
+    } else {
+      setLoading(false);
+    }
+  }, [token]);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await axios.get(`${API}/auth/me`);
+      setUser(response.data);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      logout();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = async (email, password) => {
+    try {
+      const response = await axios.post(`${API}/auth/login`, { email, password });
+      const { access_token } = response.data;
+      
+      localStorage.setItem('token', access_token);
+      setToken(access_token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      
+      await fetchCurrentUser();
+      return { success: true };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Error de inicio de sesión' 
+      };
+    }
+  };
+
+  const register = async (email, password) => {
+    try {
+      await axios.post(`${API}/auth/register`, { email, password });
+      return await login(email, password);
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Error de registro' 
+      };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+    delete axios.defaults.headers.common['Authorization'];
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
 // Components
 const Navbar = ({ currentPage, setCurrentPage }) => {
+  const { user, logout } = useAuth();
+
   return (
     <nav className="cyber-nav">
       <div className="nav-container">
@@ -21,12 +105,14 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
           >
             <span className="terminal-prompt">~/</span> Inicio
           </button>
-          <button 
-            className={`nav-link ${currentPage === 'create' ? 'active' : ''}`}
-            onClick={() => setCurrentPage('create')}
-          >
-            <span className="terminal-prompt">></span> Nueva Pregunta
-          </button>
+          {user && (
+            <button 
+              className={`nav-link ${currentPage === 'create' ? 'active' : ''}`}
+              onClick={() => setCurrentPage('create')}
+            >
+              <span className="terminal-prompt">></span> Nueva Pregunta
+            </button>
+          )}
           <button 
             className={`nav-link ${currentPage === 'resources' ? 'active' : ''}`}
             onClick={() => setCurrentPage('resources')}
@@ -34,8 +120,202 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
             <span className="terminal-prompt">#</span> Recursos
           </button>
         </div>
+        <div className="auth-section">
+          {user ? (
+            <div className="user-info">
+              <span className="user-email">
+                <span className="terminal-prompt">user@neonsec:</span> {user.email.split('@')[0]}
+              </span>
+              <button className="logout-btn" onClick={logout}>
+                <span className="terminal-prompt">exit</span> Salir
+              </button>
+            </div>
+          ) : (
+            <div className="auth-buttons">
+              <button 
+                className={`nav-link ${currentPage === 'login' ? 'active' : ''}`}
+                onClick={() => setCurrentPage('login')}
+              >
+                <span className="terminal-prompt">sudo</span> Login
+              </button>
+              <button 
+                className={`nav-link ${currentPage === 'register' ? 'active' : ''}`}
+                onClick={() => setCurrentPage('register')}
+              >
+                <span className="terminal-prompt">adduser</span> Registro
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
+  );
+};
+
+const LoginForm = ({ onSuccess }) => {
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    const result = await login(formData.email, formData.password);
+    
+    if (result.success) {
+      onSuccess();
+    } else {
+      setError(result.error);
+    }
+    
+    setLoading(false);
+  };
+
+  return (
+    <div className="auth-container">
+      <div className="auth-form">
+        <h2 className="auth-title">
+          <span className="terminal-prompt">sudo</span> Iniciar Sesión
+        </h2>
+        
+        {error && (
+          <div className="error-message">
+            <span className="terminal-prompt">error:</span> {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Email:</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              required
+              className="cyber-input"
+              placeholder="tu@email.com"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Contraseña:</label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              required
+              className="cyber-input"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button type="submit" disabled={loading} className="auth-btn">
+            <span className="terminal-prompt">./login</span>
+            {loading ? ' Ingresando...' : ' Ingresar'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const RegisterForm = ({ onSuccess }) => {
+  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres');
+      setLoading(false);
+      return;
+    }
+
+    const result = await register(formData.email, formData.password);
+    
+    if (result.success) {
+      onSuccess();
+    } else {
+      setError(result.error);
+    }
+    
+    setLoading(false);
+  };
+
+  return (
+    <div className="auth-container">
+      <div className="auth-form">
+        <h2 className="auth-title">
+          <span className="terminal-prompt">adduser</span> Crear Cuenta
+        </h2>
+        
+        {error && (
+          <div className="error-message">
+            <span className="terminal-prompt">error:</span> {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Email:</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              required
+              className="cyber-input"
+              placeholder="tu@email.com"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Contraseña:</label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              required
+              className="cyber-input"
+              placeholder="••••••••"
+            />
+            <div className="password-hint">
+              Mínimo 8 caracteres, incluye letras y números
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Confirmar Contraseña:</label>
+            <input
+              type="password"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+              required
+              className="cyber-input"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button type="submit" disabled={loading} className="auth-btn">
+            <span className="terminal-prompt">./register</span>
+            {loading ? ' Creando cuenta...' : ' Crear Cuenta'}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };
 
@@ -105,31 +385,49 @@ const CreatePost = ({ onPostCreated, onCancel }) => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    tags: '',
-    author: 'Anonymous'
+    tags: ''
   });
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
     try {
       const tagsArray = formData.tags.split(',').map(tag => tag.trim().toLowerCase()).filter(tag => tag);
       const postData = {
-        ...formData,
+        title: formData.title,
+        content: formData.content,
         tags: tagsArray
       };
 
       const response = await axios.post(`${API}/posts`, postData);
       onPostCreated(response.data);
-      setFormData({ title: '', content: '', tags: '', author: 'Anonymous' });
+      setFormData({ title: '', content: '', tags: '' });
     } catch (error) {
       console.error('Error creating post:', error);
+      setError(error.response?.data?.detail || 'Error al crear el post');
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (!user) {
+    return (
+      <div className="auth-required">
+        <h2>
+          <span className="terminal-prompt">access denied:</span> Login requerido
+        </h2>
+        <p>Necesitas iniciar sesión para crear posts.</p>
+        <button className="cancel-btn" onClick={onCancel}>
+          <span className="terminal-prompt">cd ..</span> Volver
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="create-post">
@@ -142,6 +440,12 @@ const CreatePost = ({ onPostCreated, onCancel }) => {
         </button>
       </div>
       
+      {error && (
+        <div className="error-message">
+          <span className="terminal-prompt">error:</span> {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="post-form">
         <div className="form-group">
           <label>Título:</label>
@@ -178,17 +482,6 @@ const CreatePost = ({ onPostCreated, onCancel }) => {
           />
         </div>
 
-        <div className="form-group">
-          <label>Autor:</label>
-          <input
-            type="text"
-            value={formData.author}
-            onChange={(e) => setFormData({...formData, author: e.target.value})}
-            placeholder="Tu nombre o handle"
-            className="cyber-input"
-          />
-        </div>
-
         <button type="submit" disabled={isLoading} className="submit-btn">
           <span className="terminal-prompt">./publish</span> 
           {isLoading ? ' Publicando...' : ' Publicar'}
@@ -200,8 +493,10 @@ const CreatePost = ({ onPostCreated, onCancel }) => {
 
 const PostDetail = ({ post, onBack }) => {
   const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState({ content: '', author: 'Anonymous' });
+  const [newComment, setNewComment] = useState({ content: '' });
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchComments();
@@ -218,7 +513,13 @@ const PostDetail = ({ post, onBack }) => {
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
+    if (!user) {
+      setError('Necesitas iniciar sesión para comentar');
+      return;
+    }
+
     setIsLoading(true);
+    setError('');
 
     try {
       const commentData = {
@@ -227,10 +528,11 @@ const PostDetail = ({ post, onBack }) => {
       };
 
       await axios.post(`${API}/comments`, commentData);
-      setNewComment({ content: '', author: 'Anonymous' });
+      setNewComment({ content: '' });
       fetchComments();
     } catch (error) {
       console.error('Error creating comment:', error);
+      setError(error.response?.data?.detail || 'Error al crear el comentario');
     } finally {
       setIsLoading(false);
     }
@@ -280,30 +582,37 @@ const PostDetail = ({ post, onBack }) => {
           <span className="terminal-prompt">ls</span> comentarios/ ({comments.length})
         </h3>
         
-        <form onSubmit={handleCommentSubmit} className="comment-form">
-          <div className="form-group">
-            <textarea
-              value={newComment.content}
-              onChange={(e) => setNewComment({...newComment, content: e.target.value})}
-              required
-              rows="3"
-              placeholder="Añade tu comentario..."
-              className="cyber-textarea small"
-            />
+        {user ? (
+          <form onSubmit={handleCommentSubmit} className="comment-form">
+            {error && (
+              <div className="error-message">
+                <span className="terminal-prompt">error:</span> {error}
+              </div>
+            )}
+            <div className="form-group">
+              <textarea
+                value={newComment.content}
+                onChange={(e) => setNewComment({...newComment, content: e.target.value})}
+                required
+                rows="3"
+                placeholder="Añade tu comentario..."
+                className="cyber-textarea small"
+              />
+            </div>
+            <div className="comment-form-footer">
+              <span className="comment-author-info">
+                Comentando como: <strong>{user.email.split('@')[0]}</strong>
+              </span>
+              <button type="submit" disabled={isLoading} className="comment-btn">
+                <span className="terminal-prompt">></span> Comentar
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="auth-required-comment">
+            <p><span className="terminal-prompt">!</span> Necesitas iniciar sesión para comentar</p>
           </div>
-          <div className="comment-form-footer">
-            <input
-              type="text"
-              value={newComment.author}
-              onChange={(e) => setNewComment({...newComment, author: e.target.value})}
-              placeholder="Tu nombre"
-              className="cyber-input small"
-            />
-            <button type="submit" disabled={isLoading} className="comment-btn">
-              <span className="terminal-prompt">></span> Comentar
-            </button>
-          </div>
-        </form>
+        )}
 
         <div className="comments-list">
           {comments.map(comment => (
@@ -421,35 +730,11 @@ function App() {
     try {
       const response = await axios.get(`${API}/posts`);
       if (response.data.length === 0) {
-        const samplePosts = [
-          {
-            title: "¿Mejores herramientas para OSINT en 2024?",
-            content: "¡Hola hackers! Estoy empezando en OSINT y me gustaría conocer las mejores herramientas actuales. He estado usando Maltego y Shodan, pero quiero expandir mi toolkit. ¿Qué recomiendan para:\n\n- Búsqueda de información en redes sociales\n- Análisis de dominios y subdominios\n- Reconocimiento de infraestructura\n\n¿Alguna herramienta nueva que valga la pena?",
-            tags: ["osint", "herramientas", "reconocimiento"],
-            author: "n00b_investigator"
-          },
-          {
-            title: "Bypass de WAF con técnicas avanzadas de evasión",
-            content: "Comparto algunas técnicas que he estado probando para evadir WAFs modernos:\n\n1. **Encoding múltiple**: Combinar URL encoding con Unicode\n2. **HTTP Parameter Pollution**: Duplicar parámetros\n3. **Case variation**: Alternar mayúsculas/minúsculas\n\nEjemplo práctico:\n```\n' UNION/**/SELECT/**/1,2,3--\n' %55NION %53ELECT 1,2,3--\n```\n\n¿Alguien ha probado técnicas similares? ¿Qué WAFs son más resistentes?",
-            tags: ["web", "pentesting", "waf", "bypass"],
-            author: "sql_ninja"
-          },
-          {
-            title: "Red Team vs Blue Team: Ejercicio práctico de defensa",
-            content: "Organizamos un ejercicio de Red Team vs Blue Team en nuestro lab. Algunos hallazgos interesantes:\n\n**Red Team logró:**\n- Phishing exitoso (70% tasa de éxito)\n- Escalación de privilegios via kernel exploit\n- Persistencia con scheduled tasks\n\n**Blue Team detectó:**\n- Anomalías en logs de PowerShell\n- Conexiones sospechosas con C2\n- Modificaciones en registry\n\n¿Qué técnicas de detección recomiendan para mejorar la defensa?",
-            tags: ["redteam", "blueteam", "ejercicio", "deteccion"],
-            author: "cyber_defender"
-          }
-        ];
-
-        for (const post of samplePosts) {
-          await axios.post(`${API}/posts`, post);
-        }
-        
-        fetchPosts();
+        // Sample posts will be created by backend testing or manually by users
+        console.log('No posts found. Users can create posts after logging in.');
       }
     } catch (error) {
-      console.error('Error creating sample posts:', error);
+      console.error('Error checking posts:', error);
     }
   };
 
@@ -463,6 +748,11 @@ function App() {
     setCurrentPage('detail');
   };
 
+  const handleAuthSuccess = () => {
+    setCurrentPage('home');
+    fetchPosts(); // Refresh posts after login
+  };
+
   const renderPage = () => {
     if (isLoading) {
       return (
@@ -474,6 +764,10 @@ function App() {
     }
 
     switch (currentPage) {
+      case 'login':
+        return <LoginForm onSuccess={handleAuthSuccess} />;
+      case 'register':
+        return <RegisterForm onSuccess={handleAuthSuccess} />;
       case 'create':
         return (
           <CreatePost 
@@ -508,12 +802,14 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} />
-      <main className="main-content">
-        {renderPage()}
-      </main>
-    </div>
+    <AuthProvider>
+      <div className="App">
+        <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} />
+        <main className="main-content">
+          {renderPage()}
+        </main>
+      </div>
+    </AuthProvider>
   );
 }
 
