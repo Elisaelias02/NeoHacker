@@ -7,11 +7,12 @@ Tests all backend endpoints with realistic hacker-themed data
 import requests
 import json
 import sys
+import os
 from datetime import datetime
 import time
 
-# Backend URL from frontend/.env
-BASE_URL = "https://neonsec.preview.emergentagent.com/api"
+# Backend URL from environment variable with fallback
+BASE_URL = os.environ.get('BACKEND_URL', 'http://localhost:8001') + '/api'
 
 class NeonSecAPITester:
     def __init__(self):
