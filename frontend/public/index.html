@@ -1,24 +1,154 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="es">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="description" content="A product of emergent.sh" />
-        <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-        <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-        <title>Emergent | Fullstack App</title>
+        <meta name="theme-color" content="#00ff41" />
+        
+        <!-- Primary Meta Tags -->
+        <title>NeonSec - Blog de Hackers Éticos | Comunidad Cyberpunk</title>
+        <meta name="title" content="NeonSec - Blog de Hackers Éticos | Comunidad Cyberpunk" />
+        <meta name="description" content="Comunidad de hackers éticos con diseño cyberpunk. Preguntas, recursos y conocimiento compartido sobre pentesting, OSINT, red team, blue team y más." />
+        <meta name="keywords" content="hacking ético, pentesting, cybersecurity, OSINT, red team, blue team, malware analysis, bug bounty, cyberpunk, NeonSec" />
+        <meta name="author" content="NeonSec Community" />
+        <meta name="robots" content="index, follow" />
+        
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://neonsec.preview.emergentagent.com/" />
+        <meta property="og:title" content="NeonSec - Blog de Hackers Éticos | Comunidad Cyberpunk" />
+        <meta property="og:description" content="Comunidad de hackers éticos con diseño cyberpunk. Preguntas, recursos y conocimiento compartido sobre pentesting, OSINT, red team y más." />
+        <meta property="og:image" content="https://neonsec.preview.emergentagent.com/neonsec-banner.png" />
+        <meta property="og:site_name" content="NeonSec" />
+        <meta property="og:locale" content="es_ES" />
+        
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://neonsec.preview.emergentagent.com/" />
+        <meta property="twitter:title" content="NeonSec - Blog de Hackers Éticos" />
+        <meta property="twitter:description" content="Comunidad cyberpunk de hackers éticos. Pentesting, OSINT, red team y más." />
+        <meta property="twitter:image" content="https://neonsec.preview.emergentagent.com/neonsec-banner.png" />
+        
+        <!-- Favicon and Icons -->
+        <link rel="icon" type="image/x-icon" href="%PUBLIC_URL%/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png" />
+        
+        <!-- Fonts Preload for Performance -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
+        
+        <!-- Security Headers -->
+        <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+        <meta http-equiv="X-Frame-Options" content="DENY" />
+        <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+        <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+        
+        <!-- PWA Manifest -->
+        <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+        
+        <!-- Structured Data for SEO -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "NeonSec",
+            "alternateName": "NeonSec - Blog de Hackers Éticos",
+            "url": "https://neonsec.preview.emergentagent.com",
+            "description": "Comunidad de hackers éticos con diseño cyberpunk. Preguntas, recursos y conocimiento compartido sobre pentesting, OSINT, red team, blue team y más.",
+            "inLanguage": "es-ES",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://neonsec.preview.emergentagent.com/?search={search_term_string}",
+                "query-input": "required name=search_term_string"
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "NeonSec",
+                "description": "Comunidad Cyberpunk de Hackers Éticos"
+            }
+        }
+        </script>
+        
+        <!-- Custom Cyberpunk Preloader Styles -->
+        <style>
+            /* Preloader Styles */
+            #preloader {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: #0a0a0a;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                transition: opacity 0.5s ease-out;
+            }
+            
+            #preloader.fade-out {
+                opacity: 0;
+                pointer-events: none;
+            }
+            
+            .cyber-loader {
+                font-family: 'Fira Code', monospace;
+                color: #00ff41;
+                font-size: 1.2rem;
+                text-align: center;
+            }
+            
+            .cyber-loader::after {
+                content: '_';
+                animation: blink 1s infinite;
+                color: #00ff41;
+                text-shadow: 0 0 10px #00ff41;
+            }
+            
+            @keyframes blink {
+                50% { opacity: 0; }
+            }
+            
+            .loading-text {
+                margin-top: 1rem;
+                font-size: 0.9rem;
+                color: #606060;
+            }
+            
+            .matrix-bg {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                z-index: -1;
+            }
+            
+            .matrix-bg::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 2px;
+                background: linear-gradient(90deg, transparent, #00ff41, transparent);
+                animation: scan 2s linear infinite;
+            }
+            
+            @keyframes scan {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(100%); }
+            }
+            
+            /* Ensure fonts are loaded */
+            body {
+                font-family: 'Fira Code', monospace;
+            }
+        </style>
     </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>
