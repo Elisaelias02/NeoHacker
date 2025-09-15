@@ -1200,7 +1200,7 @@ const PostDetail = ({ post, onBack }) => {
             <div key={comment.id} className="comment">
               <div className="comment-header">
                 <span className="comment-author">
-                  <span className="terminal-prompt">></span> {comment.author}
+                  <span className="terminal-prompt">&gt;</span> {comment.author}
                 </span>
                 <span className="comment-date">{formatDate(comment.created_at)}</span>
               </div>
