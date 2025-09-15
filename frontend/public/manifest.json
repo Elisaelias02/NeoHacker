@@ -1,0 +1,71 @@
+{
+  "short_name": "NeonSec",
+  "name": "NeonSec - Blog de Hackers Éticos",
+  "description": "Comunidad cyberpunk de hackers éticos. Preguntas, recursos y conocimiento compartido sobre pentesting, OSINT, red team, blue team y más.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "favicon-16x16.png",
+      "type": "image/png",
+      "sizes": "16x16"
+    },
+    {
+      "src": "favicon-32x32.png",
+      "type": "image/png",
+      "sizes": "32x32"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "type": "image/png",
+      "sizes": "180x180"
+    },
+    {
+      "src": "android-chrome-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#00ff41",
+  "background_color": "#0a0a0a",
+  "categories": ["cybersecurity", "education", "technology", "community"],
+  "lang": "es",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "shortcuts": [
+    {
+      "name": "Nueva Pregunta",
+      "short_name": "Crear",
+      "description": "Crear una nueva pregunta o post",
+      "url": "/?create=true",
+      "icons": [
+        {
+          "src": "favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    },
+    {
+      "name": "Buscar",
+      "short_name": "Search",
+      "description": "Buscar posts y recursos",
+      "url": "/?search=true",
+      "icons": [
+        {
+          "src": "favicon-32x32.png",
+          "sizes": "32x32"
+        }
+      ]
+    }
+  ]
+}
