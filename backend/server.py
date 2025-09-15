@@ -723,7 +723,7 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOAD_PATH)), name="uploads")
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=os.environ.get('CORS_ORIGINS', 'https://neonsec.emergent.host,http://localhost:3000,*').split(','),
     allow_methods=["*"],
     allow_headers=["*"],
 )
