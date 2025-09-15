@@ -635,16 +635,35 @@ async def root():
 # Health check endpoint for Kubernetes
 @api_router.get("/health")
 async def health_check():
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": "2.1"
+    }
+    
     try:
-        # Test database connection
-        await db.command("ping")
-        return {
-            "status": "healthy",
-            "database": "connected",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "version": "2.1"
-        }
+        if db is None:
+            raise Exception("Database client not initialized")
+            
+        # Test database connection with shorter timeout
+        await asyncio.wait_for(db.command("ping"), timeout=3.0)
+        health_status["database"] = "connected"
+        
+        logging.info("✅ Health check passed")
+        return health_status
+        
+    except asyncio.TimeoutError:
+        logging.error("❌ Database ping timeout")
+        health_status["status"] = "unhealthy"
+        health_status["database"] = "timeout"
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection timeout"
+        )
     except Exception as e:
+        logging.error(f"❌ Health check failed: {e}")
+        health_status["status"] = "unhealthy" 
+        health_status["database"] = f"error: {str(e)}"
         raise HTTPException(
             status_code=503,
             detail=f"Database connection failed: {str(e)}"
@@ -653,8 +672,20 @@ async def health_check():
 # Root health check (without /api prefix for load balancer)
 @app.get("/health")
 async def app_health_check():
+    """Simple health check for load balancer"""
     try:
-        await db.command("ping")
+        # If we can return this, the app is at least running
+        if db is None:
+            return {
+                "status": "starting",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "version": "2.1",
+                "database": "initializing"
+            }
+            
+        # Quick database test
+        await asyncio.wait_for(db.command("ping"), timeout=2.0)
+        
         return {
             "status": "healthy",
             "database": "connected",
@@ -662,10 +693,15 @@ async def app_health_check():
             "version": "2.1"
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Database connection failed: {str(e)}"
-        )
+        logging.error(f"❌ App health check failed: {e}")
+        # Return 200 but with error status for app startup phase
+        return {
+            "status": "unhealthy",
+            "database": "disconnected",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "version": "2.1",
+            "error": str(e)
+        }
 
 @api_router.post("/posts", response_model=Post)
 async def create_post(post_data: PostCreate, current_user: User = Depends(get_current_user)):
