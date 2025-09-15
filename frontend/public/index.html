@@ -151,18 +151,43 @@
         </style>
     </head>
     <body>
-        <noscript>You need to enable JavaScript to run this app.</noscript>
+        <!-- Cyberpunk Preloader -->
+        <div id="preloader">
+            <div class="matrix-bg"></div>
+            <div class="cyber-loader">
+                root@neonsec: initializing_matrix
+                <div class="loading-text">// Loading NeonSec Framework...</div>
+            </div>
+        </div>
+        
+        <!-- Main Application Container -->
+        <noscript>
+            <div style="
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                background: #0a0a0a;
+                color: #00ff41;
+                font-family: 'Fira Code', monospace;
+                text-align: center;
+                padding: 2rem;
+            ">
+                <div>
+                    <h1 style="color: #00ff41; text-shadow: 0 0 10px #00ff41;">
+                        root@neonsec: JavaScript Required
+                    </h1>
+                    <p style="margin-top: 1rem; color: #a0a0a0;">
+                        // Necesitas habilitar JavaScript para ejecutar NeonSec.<br>
+                        // You need to enable JavaScript to run this cyberpunk experience.
+                    </p>
+                </div>
+            </div>
+        </noscript>
+        
         <div id="root"></div>
-        <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
+        
+        <!-- Emergent Badge (Styled for Cyberpunk Theme) -->
         <a
             id="emergent-badge"
             target="_blank"
@@ -174,42 +199,69 @@
                 bottom: 20px;
                 right: 20px;
                 text-decoration: none;
-                padding: 6px 10px;
-                font-family: -apple-system, BlinkMacSystemFont,
-                    &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu, Cantarell,
-                    &quot;Open Sans&quot;, &quot;Helvetica Neue&quot;,
-                    sans-serif !important;
-                font-size: 12px !important;
+                padding: 8px 12px;
+                font-family: 'Fira Code', monospace !important;
+                font-size: 11px !important;
                 z-index: 9999 !important;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-                border-radius: 8px !important;
-                background-color: #ffffff !important;
-                border: 1px solid rgba(255, 255, 255, 0.25) !important;
+                box-shadow: 0 0 15px rgba(0, 255, 65, 0.3) !important;
+                border-radius: 6px !important;
+                background: linear-gradient(135deg, #111111, #1a1a1a) !important;
+                border: 1px solid #00ff41 !important;
+                transition: all 0.3s ease !important;
             "
+            onmouseover="this.style.boxShadow='0 0 25px rgba(0, 255, 65, 0.5)'; this.style.transform='translateY(-2px)';"
+            onmouseout="this.style.boxShadow='0 0 15px rgba(0, 255, 65, 0.3)'; this.style.transform='translateY(0)';"
         >
-            <div
-                style="display: flex; flex-direction: row; align-items: center"
-            >
+            <div style="display: flex; flex-direction: row; align-items: center">
                 <img
-                    style="width: 20px; height: 20px; margin-right: 8px"
+                    style="width: 18px; height: 18px; margin-right: 8px; filter: brightness(1.2);"
                     src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4"
                 />
-                <p
-                    style="
-                        color: #000000;
-                        font-family: -apple-system, BlinkMacSystemFont,
-                            &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu,
-                            Cantarell, &quot;Open Sans&quot;,
-                            &quot;Helvetica Neue&quot;, sans-serif !important;
-                        font-size: 12px !important;
-                        align-items: center;
-                        margin-bottom: 0;
-                    "
-                >
+                <span style="color: #00ff41; text-shadow: 0 0 5px #00ff41;">
                     Made with Emergent
-                </p>
+                </span>
             </div>
         </a>
+        
+        <!-- Preloader Script -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const preloader = document.getElementById('preloader');
+                const loaderText = document.querySelector('.cyber-loader');
+                
+                // Simulate loading sequence
+                const loadingMessages = [
+                    'root@neonsec: initializing_matrix',
+                    'root@neonsec: loading_auth_module',
+                    'root@neonsec: connecting_to_database',
+                    'root@neonsec: enabling_neon_effects',
+                    'root@neonsec: welcome_to_the_matrix'
+                ];
+                
+                let messageIndex = 0;
+                
+                const updateMessage = () => {
+                    if (messageIndex < loadingMessages.length) {
+                        loaderText.firstChild.textContent = loadingMessages[messageIndex];
+                        messageIndex++;
+                        setTimeout(updateMessage, 500);
+                    } else {
+                        // Hide preloader after loading
+                        setTimeout(() => {
+                            preloader.classList.add('fade-out');
+                            setTimeout(() => {
+                                preloader.style.display = 'none';
+                            }, 500);
+                        }, 300);
+                    }
+                };
+                
+                // Start loading sequence
+                setTimeout(updateMessage, 100);
+            });
+        </script>
+        
+        <!-- Analytics Script (PostHog) -->
         <script>
             !(function (t, e) {
                 var o, n, p, r;
@@ -274,7 +326,7 @@
             })(document, window.posthog || []);
             posthog.init("phc_yJW1VjHGGwmCbbrtczfqqNxgBDbhlhOWcdzcIJEOTFE", {
                 api_host: "https://us.i.posthog.com",
-                person_profiles: "identified_only", // or 'always' to create profiles for anonymous users as well
+                person_profiles: "identified_only",
             });
         </script>
     </body>
