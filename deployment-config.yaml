@@ -1,0 +1,46 @@
+# NeonSec Blog - Deployment Configuration
+# This file documents the environment variables needed for successful deployment
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: neonsec-config
+data:
+  # Backend Configuration
+  ENV: "production"
+  HOST: "0.0.0.0"
+  PORT: "8001"
+  DB_NAME: "neonsec_prod"
+  JWT_ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+  UPLOAD_PATH: "/app/uploads"
+  MAX_FILE_SIZE_MB: "10"
+  CORS_ORIGINS: "https://neonsec.emergent.host,https://*.emergent.host"
+  
+  # Frontend Configuration  
+  REACT_APP_BACKEND_URL: "https://neonsec.emergent.host"
+  GENERATE_SOURCEMAP: "false"
+  DISABLE_ESLINT_PLUGIN: "true"
+  NODE_ENV: "production"
+
+---
+# Required Environment Variables from Emergent Platform:
+# - MONGODB_URI: Atlas MongoDB connection string (provided by platform)
+# - JWT_SECRET: Secret key for JWT tokens (provided by platform)
+# - BACKEND_URL: Backend service URL (provided by platform)
+
+# Health Check Endpoints:
+# - /health (root level for load balancer)
+# - /api/health (API level for application monitoring)
+
+# Build Process:
+# Backend: pip install -r requirements.txt && python main.py
+# Frontend: yarn build (creates optimized production build)
+
+# Notes:
+# - MongoDB Atlas authentication configured with proper timeout settings
+# - CORS allows both production domain and wildcard for development
+# - File uploads stored in persistent volume at /app/uploads
+# - Health checks validate database connectivity
+# - All secrets managed through environment variables
+# - Build optimized for production with source maps disabled
