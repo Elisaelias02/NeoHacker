@@ -30,21 +30,33 @@ if env_file.exists():
 else:
     load_dotenv()  # Load from environment variables
 
-# MongoDB connection with Atlas compatibility
-mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-db_name = os.environ.get('DB_NAME', 'test_database')
-
-# Configure MongoDB client for Atlas compatibility
-client = AsyncIOMotorClient(
-    mongo_url,
-    serverSelectionTimeoutMS=5000,
-    connectTimeoutMS=10000,
-    socketTimeoutMS=0,
-    maxPoolSize=10,
-    retryWrites=True,
-    w='majority'
-)
-db = client[db_name]
+# MongoDB connection with Atlas compatibility and better error handling
+try:
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    db_name = os.environ.get('DB_NAME', 'test_database')
+    
+    logging.info(f"Connecting to MongoDB: {mongo_url[:50]}...")
+    logging.info(f"Database name: {db_name}")
+    
+    # Configure MongoDB client for Atlas compatibility
+    client = AsyncIOMotorClient(
+        mongo_url,
+        serverSelectionTimeoutMS=5000,
+        connectTimeoutMS=10000,
+        socketTimeoutMS=0,
+        maxPoolSize=10,
+        retryWrites=True,
+        w='majority'
+    )
+    db = client[db_name]
+    
+    logging.info("✅ MongoDB client configured successfully")
+    
+except Exception as e:
+    logging.error(f"❌ MongoDB configuration failed: {e}")
+    # Don't exit here, let the health check handle the error
+    client = None
+    db = None
 
 # Security
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
