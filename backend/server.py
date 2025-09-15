@@ -61,7 +61,7 @@ if not JWT_SECRET:
 JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get('ACCESS_TOKEN_EXPIRE_MINUTES', 60))
 
-# File upload settings
+# File upload settings with production-ready paths
 UPLOAD_PATH = Path(os.environ.get('UPLOAD_PATH', '/app/backend/uploads'))
 MAX_FILE_SIZE_MB = int(os.environ.get('MAX_FILE_SIZE_MB', 10))
 MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
@@ -70,10 +70,20 @@ ALLOWED_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 ALLOWED_PDF_EXTENSIONS = {'.pdf'}
 ALLOWED_EXTENSIONS = ALLOWED_IMAGE_EXTENSIONS | ALLOWED_PDF_EXTENSIONS
 
-# Create upload directories
-UPLOAD_PATH.mkdir(exist_ok=True)
-(UPLOAD_PATH / 'images').mkdir(exist_ok=True)
-(UPLOAD_PATH / 'pdfs').mkdir(exist_ok=True)
+# Create upload directories with proper error handling
+try:
+    UPLOAD_PATH.mkdir(parents=True, exist_ok=True)
+    (UPLOAD_PATH / 'images').mkdir(exist_ok=True)
+    (UPLOAD_PATH / 'pdfs').mkdir(exist_ok=True)
+    logging.info(f"Upload directory created at: {UPLOAD_PATH}")
+except Exception as e:
+    logging.error(f"Failed to create upload directories: {e}")
+    # Use temporary directory as fallback
+    import tempfile
+    UPLOAD_PATH = Path(tempfile.mkdtemp())
+    (UPLOAD_PATH / 'images').mkdir(exist_ok=True)
+    (UPLOAD_PATH / 'pdfs').mkdir(exist_ok=True)
+    logging.warning(f"Using temporary upload directory: {UPLOAD_PATH}")
 
 # Create the main app without a prefix
 app = FastAPI()
