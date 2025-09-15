@@ -50,8 +50,14 @@ db = client[db_name]
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
-# JWT settings
+# JWT settings with production-ready defaults
 JWT_SECRET = os.environ.get('JWT_SECRET')
+if not JWT_SECRET:
+    # Generate a default secret key for development (not recommended for production)
+    import secrets
+    JWT_SECRET = secrets.token_urlsafe(32)
+    logging.warning("JWT_SECRET not found in environment. Using generated secret (not suitable for production)")
+
 JWT_ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get('ACCESS_TOKEN_EXPIRE_MINUTES', 60))
 
