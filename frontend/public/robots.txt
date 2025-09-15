@@ -1,0 +1,37 @@
+# NeonSec - Blog de Hackers Éticos
+# https://neonsec.preview.emergentagent.com/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+
+# Sitemap
+Sitemap: https://neonsec.preview.emergentagent.com/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Allow access to CSS and JS files for proper rendering
+Allow: *.css$
+Allow: *.js$
+Allow: *.png$
+Allow: *.jpg$
+Allow: *.jpeg$
+Allow: *.gif$
+Allow: *.webp$
+Allow: *.ico$
+
+# Specific robots
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot  
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 2
