@@ -635,7 +635,7 @@ const PostDetail = ({ post, onBack }) => {
 const HomePage = ({ posts, selectedTag, setSelectedTag, onPostClick }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
-  const filteredPosts = posts.filter(post => {
+  const filteredPosts = (posts || []).filter(post => {
     const matchesSearch = !searchTerm || 
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
