@@ -291,7 +291,7 @@ test_plan:
 
   - task: "Resources Page UI"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/App.js"
     stuck_count: 1
     priority: "high"
@@ -303,6 +303,9 @@ test_plan:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL MIXED CONTENT ERROR: Resources page UI implemented correctly with perfect cyberpunk design, search/filter controls, and empty state handling. However, frontend is making HTTP requests to backend instead of HTTPS, causing Mixed Content security errors. Console shows: 'Mixed Content: The page at 'https://neonsec.preview.emergentagent.com/' was loaded over HTTPS, but requested an insecure XMLHttpRequest endpoint 'http://neonsec.preview.emergentagent.com/api/resources/'. This request has been blocked; the content must be served over HTTPS.' Environment variable REACT_APP_BACKEND_URL is correctly set to HTTPS in .env file and properly injected into build, but runtime requests are still HTTP."
+      - working: true
+        agent: "testing"
+        comment: "✅ RESOURCES PAGE UI WORKING PERFECTLY: Mixed Content error resolved by fixing URLSearchParams query string construction in fetchResources function. Resources page now loads successfully with perfect cyberpunk design including 12 terminal prompts and 20 neon green elements. Search functionality working (tested with 'Metasploit' search), type filtering working (PDF/Image/Link/All options), featured-only filtering working, responsive design confirmed on desktop/tablet/mobile viewports. Empty state displays correctly when no resources found. All UI components render properly and API calls now use HTTPS correctly."
 
   - task: "Resource Upload System"
     implemented: true
