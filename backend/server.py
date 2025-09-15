@@ -597,6 +597,41 @@ async def download_file(filename: str):
 async def root():
     return {"message": "NeonSec Hacker Blog API v2.1 - Now with Resources!"}
 
+# Health check endpoint for Kubernetes
+@api_router.get("/health")
+async def health_check():
+    try:
+        # Test database connection
+        await db.command("ping")
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "version": "2.1"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Database connection failed: {str(e)}"
+        )
+
+# Root health check (without /api prefix for load balancer)
+@app.get("/health")
+async def app_health_check():
+    try:
+        await db.command("ping")
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "version": "2.1"
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Database connection failed: {str(e)}"
+        )
+
 @api_router.post("/posts", response_model=Post)
 async def create_post(post_data: PostCreate, current_user: User = Depends(get_current_user)):
     post = Post(
