@@ -22,7 +22,13 @@ import hashlib
 import shutil
 
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+
+# Load environment file based on environment
+env_file = ROOT_DIR / '.env.production' if os.environ.get('ENV') == 'production' else ROOT_DIR / '.env'
+if env_file.exists():
+    load_dotenv(env_file)
+else:
+    load_dotenv()  # Load from environment variables
 
 # MongoDB connection with Atlas compatibility
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
