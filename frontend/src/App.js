@@ -5,6 +5,35 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Force HTTPS for all axios requests
+axios.defaults.baseURL = BACKEND_URL;
+if (BACKEND_URL && !BACKEND_URL.startsWith('https://')) {
+  console.warn('Backend URL is not HTTPS. Forcing HTTPS...');
+  axios.defaults.baseURL = BACKEND_URL.replace('http://', 'https://');
+}
+
+// Add request interceptor to ensure HTTPS
+axios.interceptors.request.use(
+  (config) => {
+    // Ensure all requests use HTTPS
+    if (config.url && config.url.startsWith('http://')) {
+      config.url = config.url.replace('http://', 'https://');
+    }
+    if (config.baseURL && config.baseURL.startsWith('http://')) {
+      config.baseURL = config.baseURL.replace('http://', 'https://');
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Force HTTPS redirect for the app
+if (typeof window !== 'undefined' && window.location.protocol === 'http:') {
+  window.location.href = `https://${window.location.host}${window.location.pathname}${window.location.search}`;
+}
+
 // Auth Context
 const AuthContext = createContext();
 
