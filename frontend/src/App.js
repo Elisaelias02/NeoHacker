@@ -1187,7 +1187,7 @@ const PostDetail = ({ post, onBack }) => {
                 Comentando como: <strong>{user.email.split('@')[0]}</strong>
               </span>
               <button type="submit" disabled={isLoading} className="comment-btn">
-                <span className="terminal-prompt">></span> Comentar
+                <span className="terminal-prompt">&gt;</span> Comentar
               </button>
             </div>
           </form>
