@@ -636,10 +636,10 @@ const HomePage = ({ posts, selectedTag, setSelectedTag, onPostClick }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
   const filteredPosts = (posts || []).filter(post => {
-    const matchesSearch = !searchTerm || 
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = !searchTerm ||
+(post.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+(post.content || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+(post.tags || []).some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesTag = !selectedTag || post.tags.includes(selectedTag);
     
