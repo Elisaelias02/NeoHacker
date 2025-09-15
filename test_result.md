@@ -356,15 +356,14 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Resources Backend API"
+  current_focus: []
+  stuck_tasks:
     - "Resources Page UI"
-    - "Resource Upload System"
+    - "Resource Upload System" 
     - "Resource Management"
     - "Admin Authentication System"
-  stuck_tasks: []
   test_all: false
-  test_priority: "high_first"
+  test_priority: "stuck_first"
 
 agent_communication:
   - agent: "main"
@@ -375,3 +374,5 @@ agent_communication:
     message: "🎉 COMPLETE AUTHENTICATION & FRONTEND TESTING SUCCESSFUL! All 5 high-priority frontend tasks are now WORKING PERFECTLY. Comprehensive testing performed: ✅ Authentication System (registration, login, logout, JWT persistence, protected routes, password validation, XSS prevention) ✅ Create Post Form (authentication required, successful post creation, API integration) ✅ Comments System (authentication required, comment creation/display working) ✅ Tag System (filtering by tags working, frontend-backend integration) ✅ Search Functionality (text search working, XSS prevention) ✅ Cyberpunk UI Design (neon green theme, terminal prompts, responsive design). Security features tested and working. NeonSec hacker blog is FULLY FUNCTIONAL and ready for production use!"
   - agent: "main"
     message: "Added complete Resources management system to NeonSec hacker blog. Implemented cyberpunk-themed resources section with admin authentication (first user becomes admin), secure file upload (PDF/images up to 10MB), external link creation, search/filter functionality, resource cards with metadata, detail view, and admin-only deletion. All security features implemented including file type validation, XSS prevention, and proper access controls. Ready for comprehensive testing of the new Resources functionality."
+  - agent: "testing"
+    message: "🚨 CRITICAL MIXED CONTENT SECURITY ERROR BLOCKING RESOURCES SYSTEM: Comprehensive testing revealed that while all Resources components are implemented correctly with perfect cyberpunk UI design, the system is completely non-functional due to Mixed Content security errors. Frontend makes HTTP requests to backend instead of HTTPS, causing browser to block all API calls. Root cause: Despite REACT_APP_BACKEND_URL being correctly set to HTTPS in .env and properly injected into build, runtime requests are HTTP. This blocks: ❌ User registration/authentication (400 errors) ❌ Resources API calls ❌ Admin features ❌ All resource management. Backend Resources API is working (fixed libmagic dependency). URGENT: Main agent must use WEBSEARCH TOOL to find solution for Mixed Content/HTTPS protocol mismatch in React production builds."
