@@ -582,7 +582,7 @@ const ResourcesPage = () => {
       const params = new URLSearchParams();
       if (showFeaturedOnly) params.append('featured_only', 'true');
       
-      const response = await axios.get(`${API}/resources?${params}`);
+      const response = await axios.get(`${API}/resources/?${params}`);
       setResources(response.data);
     } catch (error) {
       console.error('Error fetching resources:', error);
