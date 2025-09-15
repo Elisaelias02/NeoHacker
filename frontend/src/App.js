@@ -125,6 +125,7 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
             <div className="user-info">
               <span className="user-email">
                 <span className="terminal-prompt">user@neonsec:</span> {user.email.split('@')[0]}
+                {user.role === 'admin' && <span className="admin-badge">[admin]</span>}
               </span>
               <button className="logout-btn" onClick={logout}>
                 <span className="terminal-prompt">exit</span> Salir
@@ -152,6 +153,556 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
   );
 };
 
+// Resource Components
+const ResourceCard = ({ resource, onView }) => {
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const getResourceIcon = (type) => {
+    switch (type) {
+      case 'pdf': return '📄';
+      case 'image': return '🖼️';
+      case 'link': return '🔗';
+      default: return '📁';
+    }
+  };
+
+  const handleAccess = () => {
+    if (resource.type === 'link') {
+      window.open(resource.external_url, '_blank', 'noopener,noreferrer');
+    } else {
+      window.open(`${BACKEND_URL}${resource.file_url}`, '_blank');
+    }
+  };
+
+  return (
+    <div className={`resource-card ${resource.is_featured ? 'featured' : ''}`}>
+      <div className="resource-header">
+        <div className="resource-icon">{getResourceIcon(resource.type)}</div>
+        <div className="resource-type">
+          <span className="terminal-prompt">type:</span> {resource.type.toUpperCase()}
+        </div>
+        {resource.is_featured && <div className="featured-badge">★ Destacado</div>}
+      </div>
+      
+      <h3 className="resource-title">{resource.name}</h3>
+      <p className="resource-description">{resource.description}</p>
+      
+      <div className="resource-meta">
+        {resource.file_size && (
+          <span className="resource-size">
+            <span className="terminal-prompt">size:</span> {formatFileSize(resource.file_size)}
+          </span>
+        )}
+        <span className="resource-date">
+          <span className="terminal-prompt">created:</span> {new Date(resource.created_at).toLocaleDateString('es-ES')}
+        </span>
+        <span className="resource-author">
+          <span className="terminal-prompt">by:</span> {resource.uploaded_by.split('@')[0]}
+        </span>
+      </div>
+      
+      <div className="resource-actions">
+        <button className="resource-btn primary" onClick={handleAccess}>
+          <span className="terminal-prompt">{resource.type === 'link' ? 'open' : 'download'}</span>
+          {resource.type === 'link' ? ' Abrir' : ' Descargar'}
+        </button>
+        <button className="resource-btn secondary" onClick={() => onView(resource)}>
+          <span className="terminal-prompt">cat</span> Ver detalles
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const ResourceUploadForm = ({ onResourceCreated, onCancel }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    external_url: '',
+    is_featured: false
+  });
+  const [file, setFile] = useState(null);
+  const [uploadType, setUploadType] = useState('file'); // 'file' or 'link'
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (user.role !== 'admin') {
+      setError('Solo los administradores pueden subir recursos');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      if (uploadType === 'file') {
+        if (!file) {
+          setError('Selecciona un archivo');
+          return;
+        }
+
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', file);
+        uploadFormData.append('name', formData.name);
+        uploadFormData.append('description', formData.description);
+        uploadFormData.append('is_featured', formData.is_featured);
+
+        const response = await axios.post(`${API}/resources/upload`, uploadFormData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        onResourceCreated(response.data);
+      } else {
+        const response = await axios.post(`${API}/resources/link`, {
+          name: formData.name,
+          description: formData.description,
+          external_url: formData.external_url,
+          is_featured: formData.is_featured
+        });
+
+        onResourceCreated(response.data);
+      }
+
+      setFormData({ name: '', description: '', external_url: '', is_featured: false });
+      setFile(null);
+    } catch (error) {
+      console.error('Error uploading resource:', error);
+      setError(error.response?.data?.detail || 'Error al subir el recurso');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (user.role !== 'admin') {
+    return (
+      <div className="auth-required">
+        <h2>
+          <span className="terminal-prompt">access denied:</span> Admin requerido
+        </h2>
+        <p>Solo los administradores pueden subir recursos.</p>
+        <button className="cancel-btn" onClick={onCancel}>
+          <span className="terminal-prompt">cd ..</span> Volver
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="resource-upload">
+      <div className="section-header">
+        <h2>
+          <span className="terminal-prompt">nano</span> upload_resource.sh
+        </h2>
+        <button className="cancel-btn" onClick={onCancel}>
+          <span className="terminal-prompt">^X</span> Cancelar
+        </button>
+      </div>
+      
+      {error && (
+        <div className="error-message">
+          <span className="terminal-prompt">error:</span> {error}
+        </div>
+      )}
+
+      <div className="upload-type-selector">
+        <button 
+          className={`type-btn ${uploadType === 'file' ? 'active' : ''}`}
+          onClick={() => setUploadType('file')}
+        >
+          <span className="terminal-prompt">upload</span> Subir Archivo
+        </button>
+        <button 
+          className={`type-btn ${uploadType === 'link' ? 'active' : ''}`}
+          onClick={() => setUploadType('link')}
+        >
+          <span className="terminal-prompt">link</span> Agregar Enlace
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="resource-form">
+        <div className="form-group">
+          <label>Nombre del recurso:</label>
+          <input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({...formData, name: e.target.value})}
+            required
+            className="cyber-input"
+            placeholder="Nombre descriptivo del recurso..."
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Descripción:</label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData({...formData, description: e.target.value})}
+            required
+            rows="4"
+            className="cyber-textarea"
+            placeholder="Describe el contenido y utilidad del recurso..."
+          />
+        </div>
+
+        {uploadType === 'file' ? (
+          <div className="form-group">
+            <label>Archivo (PDF, JPG, PNG, GIF - Máx. 10MB):</label>
+            <input
+              type="file"
+              onChange={(e) => setFile(e.target.files[0])}
+              accept=".pdf,.jpg,.jpeg,.png,.gif"
+              required
+              className="cyber-file-input"
+            />
+            {file && (
+              <div className="file-info">
+                <span className="terminal-prompt">selected:</span> {file.name} ({Math.round(file.size / 1024)}KB)
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="form-group">
+            <label>URL externa:</label>
+            <input
+              type="url"
+              value={formData.external_url}
+              onChange={(e) => setFormData({...formData, external_url: e.target.value})}
+              required
+              className="cyber-input"
+              placeholder="https://ejemplo.com/recurso"
+            />
+          </div>
+        )}
+
+        <div className="form-group checkbox-group">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={formData.is_featured}
+              onChange={(e) => setFormData({...formData, is_featured: e.target.checked})}
+              className="cyber-checkbox"
+            />
+            <span className="terminal-prompt">★</span> Marcar como destacado
+          </label>
+        </div>
+
+        <button type="submit" disabled={isLoading} className="submit-btn">
+          <span className="terminal-prompt">./upload</span> 
+          {isLoading ? ' Subiendo...' : ' Subir Recurso'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+const ResourceDetail = ({ resource, onBack, onDelete }) => {
+  const { user } = useAuth();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este recurso?')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await axios.delete(`${API}/resources/${resource.id}`);
+      onDelete(resource.id);
+      onBack();
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+      alert('Error al eliminar el recurso');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return 'N/A';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  return (
+    <div className="resource-detail">
+      <div className="section-header">
+        <button className="back-btn" onClick={onBack}>
+          <span className="terminal-prompt">cd ..</span> Volver
+        </button>
+        {user?.role === 'admin' && (
+          <button 
+            className="delete-btn" 
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            <span className="terminal-prompt">rm</span> {isDeleting ? 'Eliminando...' : 'Eliminar'}
+          </button>
+        )}
+      </div>
+
+      <div className="resource-full">
+        <div className="resource-header-detail">
+          <h1 className="resource-title-full">{resource.name}</h1>
+          {resource.is_featured && <span className="featured-badge large">★ Destacado</span>}
+        </div>
+        
+        <div className="resource-meta-detail">
+          <div className="meta-item">
+            <span className="meta-label">
+              <span className="terminal-prompt">type:</span>
+            </span>
+            <span className="meta-value">{resource.type.toUpperCase()}</span>
+          </div>
+          
+          <div className="meta-item">
+            <span className="meta-label">
+              <span className="terminal-prompt">created:</span>
+            </span>
+            <span className="meta-value">{formatDate(resource.created_at)}</span>
+          </div>
+          
+          <div className="meta-item">
+            <span className="meta-label">
+              <span className="terminal-prompt">author:</span>
+            </span>
+            <span className="meta-value">{resource.uploaded_by.split('@')[0]}</span>
+          </div>
+          
+          {resource.file_size && (
+            <div className="meta-item">
+              <span className="meta-label">
+                <span className="terminal-prompt">size:</span>
+              </span>
+              <span className="meta-value">{formatFileSize(resource.file_size)}</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="resource-description-full">
+          <h3><span className="terminal-prompt">cat</span> descripcion.txt</h3>
+          <p>{resource.description}</p>
+        </div>
+        
+        <div className="resource-actions-detail">
+          {resource.type === 'link' ? (
+            <a 
+              href={resource.external_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="resource-btn primary large"
+            >
+              <span className="terminal-prompt">open</span> Abrir Enlace Externo
+            </a>
+          ) : (
+            <a 
+              href={`${BACKEND_URL}${resource.file_url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="resource-btn primary large"
+            >
+              <span className="terminal-prompt">download</span> Descargar Archivo
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ResourcesPage = () => {
+  const [resources, setResources] = useState([]);
+  const [filteredResources, setFilteredResources] = useState([]);
+  const [selectedResource, setSelectedResource] = useState(null);
+  const [currentView, setCurrentView] = useState('list'); // 'list', 'upload', 'detail'
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('all');
+  const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    fetchResources();
+  }, []);
+
+  useEffect(() => {
+    filterResources();
+  }, [resources, searchTerm, filterType, showFeaturedOnly]);
+
+  const fetchResources = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (showFeaturedOnly) params.append('featured_only', 'true');
+      
+      const response = await axios.get(`${API}/resources?${params}`);
+      setResources(response.data);
+    } catch (error) {
+      console.error('Error fetching resources:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const filterResources = () => {
+    let filtered = [...resources];
+    
+    // Filter by type
+    if (filterType !== 'all') {
+      filtered = filtered.filter(resource => resource.type === filterType);
+    }
+    
+    // Filter by featured
+    if (showFeaturedOnly) {
+      filtered = filtered.filter(resource => resource.is_featured);
+    }
+    
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(resource => 
+        resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        resource.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    setFilteredResources(filtered);
+  };
+
+  const handleResourceCreated = (newResource) => {
+    setResources([newResource, ...resources]);
+    setCurrentView('list');
+  };
+
+  const handleResourceDelete = (resourceId) => {
+    setResources(resources.filter(r => r.id !== resourceId));
+  };
+
+  const handleResourceView = (resource) => {
+    setSelectedResource(resource);
+    setCurrentView('detail');
+  };
+
+  if (currentView === 'upload') {
+    return (
+      <ResourceUploadForm 
+        onResourceCreated={handleResourceCreated}
+        onCancel={() => setCurrentView('list')}
+      />
+    );
+  }
+
+  if (currentView === 'detail' && selectedResource) {
+    return (
+      <ResourceDetail 
+        resource={selectedResource}
+        onBack={() => setCurrentView('list')}
+        onDelete={handleResourceDelete}
+      />
+    );
+  }
+
+  return (
+    <div className="resources-page">
+      <div className="resources-header">
+        <h1 className="page-title">
+          <span className="terminal-prompt">ls</span> recursos/
+        </h1>
+        {user?.role === 'admin' && (
+          <button 
+            className="upload-btn"
+            onClick={() => setCurrentView('upload')}
+          >
+            <span className="terminal-prompt">+</span> Subir Recurso
+          </button>
+        )}
+      </div>
+
+      <div className="resources-filters">
+        <div className="search-container">
+          <span className="terminal-prompt">grep -i</span>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="buscar recursos..."
+            className="search-input"
+          />
+        </div>
+        
+        <div className="filter-controls">
+          <div className="filter-group">
+            <label>Tipo:</label>
+            <select 
+              value={filterType} 
+              onChange={(e) => setFilterType(e.target.value)}
+              className="cyber-select"
+            >
+              <option value="all">Todos</option>
+              <option value="pdf">PDF</option>
+              <option value="image">Imágenes</option>
+              <option value="link">Enlaces</option>
+            </select>
+          </div>
+          
+          <div className="filter-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={showFeaturedOnly}
+                onChange={(e) => setShowFeaturedOnly(e.target.checked)}
+                className="cyber-checkbox"
+              />
+              <span className="terminal-prompt">★</span> Solo destacados
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="loading">
+          <span className="terminal-prompt">loading</span>
+          <span className="loading-dots">...</span>
+        </div>
+      ) : (
+        <div className="resources-grid">
+          {filteredResources.length === 0 ? (
+            <div className="no-resources">
+              <span className="terminal-prompt">404:</span> No se encontraron recursos
+            </div>
+          ) : (
+            filteredResources.map(resource => (
+              <ResourceCard 
+                key={resource.id} 
+                resource={resource} 
+                onView={handleResourceView}
+              />
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Auth Forms (unchanged)
 const LoginForm = ({ onSuccess }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
@@ -319,6 +870,7 @@ const RegisterForm = ({ onSuccess }) => {
   );
 };
 
+// Other components remain the same...
 const TagList = ({ tags, selectedTag, onTagClick }) => {
   const popularTags = ['web', 'pentesting', 'osint', 'redteam', 'blueteam', 'malware', 'forensics', 'crypto', 'social-engineering', 'bug-bounty'];
   
@@ -700,6 +1252,7 @@ const HomePage = ({ posts, selectedTag, setSelectedTag, onPostClick }) => {
   );
 };
 
+// Main App Component
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [posts, setPosts] = useState([]);
@@ -709,10 +1262,6 @@ function App() {
 
   useEffect(() => {
     fetchPosts();
-    // Add some sample data if no posts exist
-    setTimeout(() => {
-      createSamplePosts();
-    }, 1000);
   }, []);
 
   const fetchPosts = async () => {
@@ -723,18 +1272,6 @@ function App() {
       console.error('Error fetching posts:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const createSamplePosts = async () => {
-    try {
-      const response = await axios.get(`${API}/posts`);
-      if (response.data.length === 0) {
-        // Sample posts will be created by backend testing or manually by users
-        console.log('No posts found. Users can create posts after logging in.');
-      }
-    } catch (error) {
-      console.error('Error checking posts:', error);
     }
   };
 
@@ -750,11 +1287,11 @@ function App() {
 
   const handleAuthSuccess = () => {
     setCurrentPage('home');
-    fetchPosts(); // Refresh posts after login
+    fetchPosts();
   };
 
   const renderPage = () => {
-    if (isLoading) {
+    if (isLoading && currentPage === 'home') {
       return (
         <div className="loading">
           <span className="terminal-prompt">loading</span>
@@ -783,12 +1320,7 @@ function App() {
           />
         );
       case 'resources':
-        return (
-          <div className="resources-page">
-            <h2><span className="terminal-prompt">ls</span> recursos/</h2>
-            <p>Sección de recursos en desarrollo...</p>
-          </div>
-        );
+        return <ResourcesPage />;
       default:
         return (
           <HomePage 
