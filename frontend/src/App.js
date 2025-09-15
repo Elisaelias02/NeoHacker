@@ -139,7 +139,7 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
               className={`nav-link ${currentPage === 'create' ? 'active' : ''}`}
               onClick={() => setCurrentPage('create')}
             >
-              <span className="terminal-prompt">></span> Nueva Pregunta
+              <span className="terminal-prompt">&gt;</span> Nueva Pregunta
             </button>
           )}
           <button 
