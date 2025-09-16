@@ -1,0 +1,6 @@
+exclude_dirs:
+  - /venv_neohacker
+  - /node_modules
+  - /.git
+skips:
+  - B101  # Skip assert_used test
